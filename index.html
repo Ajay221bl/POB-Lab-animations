@@ -12,7 +12,7 @@
 /* Layout: lab tabs across the top, concept list on the left, one player (stage + caption + transport) on the right. */
 :root {
   --bg: #eef3f0; --surface: #ffffff; --ink: #15211c; --muted: #56655e; --line: #cfdad4;
-  --accent: #0e7c5b; --accent-ink: #ffffff; --accent-soft: #d6ede4; --amber: #b86a00;
+  --alert: #c62828; --alert-ink: #ffffff; --accent: #0e7c5b; --accent-ink: #ffffff; --accent-soft: #d6ede4; --amber: #b86a00;
   --stage: #fbfdfc; --stage-soft: #eef4f1; --stage-chip: #e3ece7; --glass: #dfe7e3;
   --blob-a: rgba(63,174,120,.10); --blob-b: rgba(240,164,58,.09); --dot: rgba(21,33,28,.07); --shadow: rgba(20,45,35,.20);
   --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
@@ -21,12 +21,12 @@
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0e1512; --surface: #16201b; --ink: #e5eee9; --muted: #9db0a6; --line: #2b3a33;
-  --accent: #3fc79a; --accent-ink: #062018; --accent-soft: #173a2e; --amber: #f0a43a;
+  --alert: #ef5350; --alert-ink: #1a0505; --accent: #3fc79a; --accent-ink: #062018; --accent-soft: #173a2e; --amber: #f0a43a;
   --stage: #111a16; --stage-soft: #1a2620; --stage-chip: #22312a; --glass: #2a3832; color-scheme: dark;
   --blob-a: rgba(63,199,154,.10); --blob-b: rgba(240,164,58,.07); --dot: rgba(229,238,233,.06); --shadow: rgba(0,0,0,.5); } }
 :root[data-theme="dark"] {
   --bg: #0e1512; --surface: #16201b; --ink: #e5eee9; --muted: #9db0a6; --line: #2b3a33;
-  --accent: #3fc79a; --accent-ink: #062018; --accent-soft: #173a2e; --amber: #f0a43a;
+  --alert: #ef5350; --alert-ink: #1a0505; --accent: #3fc79a; --accent-ink: #062018; --accent-soft: #173a2e; --amber: #f0a43a;
   --stage: #111a16; --stage-soft: #1a2620; --stage-chip: #22312a; --glass: #2a3832; color-scheme: dark;
   --blob-a: rgba(63,199,154,.10); --blob-b: rgba(240,164,58,.07); --dot: rgba(229,238,233,.06); --shadow: rgba(0,0,0,.5); }
 * { box-sizing: border-box; }
@@ -102,6 +102,15 @@ nav.labs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margi
 .sp { font: inherit; font-family: var(--f-mono); font-size: 13px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 4px 8px; cursor: pointer; }
 .voice { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: 14px; font-weight: 700; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 14px 6px 10px; cursor: pointer; }
 .voice[hidden] { display: none; }
+.voice[aria-pressed="false"] { background: var(--alert); border-color: var(--alert); color: var(--alert-ink); animation: callout 2.4s ease-in-out infinite; }
+@keyframes callout { 0%, 100% { box-shadow: 0 0 0 0 rgba(198,40,40,.45); } 50% { box-shadow: 0 0 0 8px rgba(198,40,40,0); } }
+.soundtip { position: absolute; left: 12px; top: 12px; z-index: 3; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; padding: 8px 14px 8px 10px; background: var(--alert); color: var(--alert-ink); font: 700 14px var(--f-body); cursor: pointer; box-shadow: 0 6px 18px -6px rgba(0,0,0,.4); animation: callout 2.4s ease-in-out infinite; }
+.soundtip[hidden] { display: none; }
+.soundtip svg { width: 18px; height: 18px; fill: currentColor; }
+.soundtip .short { display: none; }
+@media (max-width: 520px) { .soundtip .long { display: none; } .soundtip .short { display: inline; } }
+@media (max-width: 520px) { .soundtip { font-size: 12px; padding: 6px 10px 6px 8px; left: 8px; top: 8px; } }
+@media (prefers-reduced-motion: reduce) { .voice[aria-pressed="false"], .soundtip { animation: none; } }
 .voice svg { width: 20px; height: 20px; fill: currentColor; }
 .voice .on { display: none; } .voice[aria-pressed="true"] .on { display: inline; } .voice[aria-pressed="true"] .off { display: none; }
 .voice[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
@@ -132,7 +141,7 @@ kbd { font-family: var(--f-mono); font-size: 12px; border: 1px solid var(--line)
     <aside class="concepts" id="concepts" aria-label="Concepts"></aside>
     <section class="player" id="playerBox" aria-live="off">
       <div class="ptitle"><h3 id="ptitle"></h3><span class="lab" id="plab"></span></div>
-      <div class="stage" id="stage" tabindex="0" aria-label="Animation. Click to play or pause."><canvas id="cv"></canvas></div>
+      <div class="stage" id="stage" tabindex="0" aria-label="Animation. Click to play or pause."><canvas id="cv"></canvas><button class="soundtip" id="soundTip" hidden type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="long">This animation has narration. Tap to turn the sound on</span><span class="short">Has narration: tap for sound</span></button></div>
       <div class="caption" id="capbox" aria-live="polite"><div class="stepno" id="stepno"></div><p id="cap"></p></div>
       <div class="transport">
         <div class="btns">
@@ -147,7 +156,7 @@ kbd { font-family: var(--f-mono); font-size: 12px; border: 1px solid var(--line)
           <span class="time" id="time">0:00 / 0:00</span>
         </div>
         <div class="speeds" role="group" aria-label="Playback speed"><span>Speed</span></div>
-        <button class="voice" id="bVoice" hidden aria-pressed="false" title="Turn narration on (N)"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="off" d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Narration off</span></button>
+        <button class="voice" id="bVoice" hidden aria-pressed="false" title="Turn narration on (N)"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="off" d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Narration off: turn on</span></button>
         <label class="vol" id="volBox" hidden title="Narration volume"><span class="sr">Narration volume</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg><input type="range" id="vol" min="0" max="100" step="5" value="100" aria-label="Narration volume"></label>
       </div>
       <div class="chips" id="chips" aria-label="Jump to a step"></div>
@@ -3612,7 +3621,8 @@ function makeT(a, t) {
     try { localStorage.setItem('pob-narr', narrOn ? '1' : '0'); } catch (e) {}
     LABS.forEach(l => l.anims.forEach(prepare));
     const b = $('bVoice'); b.setAttribute('aria-pressed', narrOn ? 'true' : 'false');
-    b.querySelector('span').textContent = narrOn ? 'Narration on' : 'Narration off';
+    b.querySelector('span').textContent = narrOn ? 'Narration on' : 'Narration off: turn on';
+    $('soundTip').hidden = narrOn;
     b.title = (narrOn ? 'Turn narration off' : 'Turn narration on') + ' (N)';
     $('volBox').classList.toggle('off', !narrOn);
     if (anim) { t = anim._starts[i] + lp * anim._durs[i]; drawTicks(); loadAudio(); lastStep = -1; draw(); }
@@ -3701,6 +3711,7 @@ function makeT(a, t) {
     const setVol = () => { audio.volume = clamp(vol.value / 100, 0, 1); vol.setAttribute('aria-valuetext', vol.value + '%'); try { localStorage.setItem('pob-vol', vol.value); } catch (e) {} };
     vol.addEventListener('input', setVol); setVol();
   }
+  if (HAS_NARR) $('soundTip').onclick = e => { e.stopPropagation(); $('bVoice').click(); };
   if (HAS_NARR) { $('bVoice').hidden = false; $('bVoice').onclick = () => { userStarted = true; setNarr(!narrOn); if (narrOn && !playing) setPlaying(true); }; }
   try { if (HAS_NARR && localStorage.getItem('pob-narr') === '1') { narrOn = true; LABS.forEach(l => l.anims.forEach(prepare)); } } catch (e) {}
   theme(); buildTabs();
