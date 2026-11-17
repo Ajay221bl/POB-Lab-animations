@@ -105,6 +105,12 @@ nav.labs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margi
 .voice svg { width: 20px; height: 20px; fill: currentColor; }
 .voice .on { display: none; } .voice[aria-pressed="true"] .on { display: inline; } .voice[aria-pressed="true"] .off { display: none; }
 .voice[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.vol { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+.vol[hidden] { display: none; }
+.vol svg { width: 18px; height: 18px; fill: currentColor; flex: none; }
+.vol input { width: 110px; accent-color: var(--accent); cursor: pointer; }
+.vol.off { opacity: .45; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .sp[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
 details.steps { margin: 14px 4px 2px; }
 details.steps summary { cursor: pointer; color: var(--muted); font-size: 14px; }
@@ -142,6 +148,7 @@ kbd { font-family: var(--f-mono); font-size: 12px; border: 1px solid var(--line)
         </div>
         <div class="speeds" role="group" aria-label="Playback speed"><span>Speed</span></div>
         <button class="voice" id="bVoice" hidden aria-pressed="false" title="Turn narration on (N)"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="off" d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Narration off</span></button>
+        <label class="vol" id="volBox" hidden title="Narration volume"><span class="sr">Narration volume</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/></svg><input type="range" id="vol" min="0" max="100" step="5" value="100" aria-label="Narration volume"></label>
       </div>
       <div class="chips" id="chips" aria-label="Jump to a step"></div>
       <details class="steps" id="stepsBox"><summary>All steps (read or jump to any step)</summary><ol id="stepList"></ol></details>
@@ -3607,6 +3614,7 @@ function makeT(a, t) {
     const b = $('bVoice'); b.setAttribute('aria-pressed', narrOn ? 'true' : 'false');
     b.querySelector('span').textContent = narrOn ? 'Narration on' : 'Narration off';
     b.title = (narrOn ? 'Turn narration off' : 'Turn narration on') + ' (N)';
+    $('volBox').classList.toggle('off', !narrOn);
     if (anim) { t = anim._starts[i] + lp * anim._durs[i]; drawTicks(); loadAudio(); lastStep = -1; draw(); }
   }
   function drawTicks() {
@@ -3687,6 +3695,12 @@ function makeT(a, t) {
   /* concept buttons count as a user choice: play when a student picks a concept */
   document.getElementById('concepts').addEventListener('click', () => { userStarted = true; });
 
+  if (HAS_NARR) {
+    const vol = $('vol'); $('volBox').hidden = false;
+    try { const v = localStorage.getItem('pob-vol'); if (v !== null) vol.value = v; } catch (e) {}
+    const setVol = () => { audio.volume = clamp(vol.value / 100, 0, 1); vol.setAttribute('aria-valuetext', vol.value + '%'); try { localStorage.setItem('pob-vol', vol.value); } catch (e) {} };
+    vol.addEventListener('input', setVol); setVol();
+  }
   if (HAS_NARR) { $('bVoice').hidden = false; $('bVoice').onclick = () => { userStarted = true; setNarr(!narrOn); if (narrOn && !playing) setPlaying(true); }; }
   try { if (HAS_NARR && localStorage.getItem('pob-narr') === '1') { narrOn = true; LABS.forEach(l => l.anims.forEach(prepare)); } } catch (e) {}
   theme(); buildTabs();
