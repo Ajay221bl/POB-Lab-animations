@@ -3726,5 +3726,20 @@ function makeT(a, t) {
 })();
 
 </script>
+<!-- GoatCounter visitor stats (https://ajay221b.goatcounter.com). Each animation (#id) is also counted as its own page. -->
+<script>
+(function () {
+  var pending = [];
+  function send(p) { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: p }); else pending.push(p); }
+  function countHash() { if (location.hash.length > 1) send(location.pathname + location.hash); }
+  var tries = 0, wait = setInterval(function () {
+    if (window.goatcounter && window.goatcounter.count) { clearInterval(wait); pending.splice(0).forEach(send); }
+    else if (++tries > 40) clearInterval(wait);
+  }, 250);
+  window.addEventListener('hashchange', countHash);
+  countHash();
+})();
+</script>
+<script data-goatcounter="https://ajay221b.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
 </html>
